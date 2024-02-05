@@ -1,11 +1,13 @@
+import base64
 from flask import Flask, request, send_file
 from wand.image import Image
+from io import BytesIO
 
 app = Flask(__name__,  static_url_path='/')
 
 @app.route('/', methods=['GET'])
-def hello_world():
-    return 'Hello, World!'
+def index():
+    return app.send_static_file('index.html')
 
 @app.route('/crop', methods=['POST'])
 def crop_image():
@@ -16,9 +18,10 @@ def crop_image():
 
     with Image(file=image_file) as img:
         img.trim()
-        img.save(filename='cropped_image.jpg')
-
-    return send_file('cropped_image.jpg', mimetype='image/jpeg')
+        cropped_image = BytesIO()
+        img.save(cropped_image)
+        base64_string_str = base64.b64encode(cropped_image.getvalue()).decode()
+        return "<img src='data:image/jpeg;base64,{}'>".format(base64_string_str)
 
 if __name__ == '__main__':
     app.run(debug=True)
