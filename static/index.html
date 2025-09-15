@@ -2,16 +2,23 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Testa</title>
+    <title>Imagix</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type="text/css"></style>
     <script
       src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.js"
       crossorigin="anonymous"
     ></script>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap"
+    />
   </head>
   <body>
     <div id="main">
+      <h1 class="text-5xl font-bold">Imagix</h1>
+      <p>Upload an image and apply selected simple operations.</p>
+
       <form
         hx-post="/crop"
         hx-target="#result"
@@ -19,11 +26,73 @@
         enctype="multipart/form-data"
       >
         <input type="file" name="image" accept="image/*" />
-        <button type="submit">Upload and Crop</button>
+        <select name="format">
+          <option value="crop">crop</option>
+          <option value="flip">flip</option>
+          <option value="background">background</option>
+          <option value="swirl">swirl</option>
+        </select>
+        <button class="btn" type="submit">Upload and Crop</button>
       </form>
+
+      <div id="stuff">
+        Crop <input type="checkbox" name="operation" value="crop" /> Flip
+        <input type="checkbox" name="operation" value="flip" /> Background
+        <input type="checkbox" name="operation" value="background" /> Swirl
+        <input type="checkbox" name="operation" value="swirl" />
+      </div>
+
+      <img class="htmx-indicator" src="https://i.imgur.com/8THYvPQ.gif" />
 
       <div id="result"></div>
     </div>
-    <script></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const dropzone = document.getElementById("dropzone");
+
+        dropzone.addEventListener("dragover", () => {
+          dropzone.classList.add("hover");
+        });
+
+        dropzone.addEventListener("dragleave", () => {
+          dropzone.classList.remove("hover");
+        });
+
+        dropzone
+          .querySelector("input")
+          .addEventListener("change", function (e) {
+            const file = this.files[0];
+
+            dropzone.classList.remove("hover");
+
+            if (this.accept && !this.accept.split(/, ?/).includes(file.type)) {
+              return alert("File type not allowed.");
+            }
+
+            dropzone.classList.add("dropped");
+            dropzone.querySelector("img").remove();
+
+            if (/^image\/(gif|png|jpeg)$/i.test(file.type)) {
+              const reader = new FileReader();
+
+              reader.readAsDataURL(file);
+
+              reader.onload = function (e) {
+                const data = e.target.result;
+                const img = document.createElement("img");
+                img.src = data;
+                img.style.display = "block";
+
+                dropzone.querySelector("div").appendChild(img);
+              };
+            } else {
+              const ext = file.name.split(".").pop();
+
+              dropzone.querySelector("div").textContent = ext;
+            }
+          });
+      });
+    </script>
   </body>
 </html>
